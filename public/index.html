@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>填写提交</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <style>
+        * {padding: 0;margin: 0;font-family: '微软雅黑','Microsoft YaHei';-webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;}
+        .tip {color: #dc7010;font-size: 12px;
+            height: 30px;}
+        .tipHidden {visibility: hidden;}
+        .tipShow {visibility: visible;}
+        .center{text-align: center;}
+        .title{ font-size:20px;margin:20px;}
+        form{max-width: 500px;margin:0 auto;padding:10px;}
+        #content{display: block;
+            width: 100%;
+            height: 200px;
+            padding: 6px 12px;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #555;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+            -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+            -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+            transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;}
+        .btn{
+            display: inline-block;
+            color: #fff;
+            background-color: #337ab7;
+            padding: 6px 12px;
+            margin-bottom: 0;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.42857143;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            -ms-touch-action: manipulation;
+            touch-action: manipulation;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            border: 1px solid transparent;
+            border-radius: 4px;}
+        .btn-disabled{background-color:#839BB7;}
+    </style>
+</head>
+<body>
+<p class="center title">说点什么吧</p>
+<form action="/contact/collect" method="post" class="center">
+    <textarea name="content" id="content"></textarea>
+    <p class="tip tipHidden">请</p>
+    <input type="button" value="提交" id="submit" class="btn"/>
+</form>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script>
+    var $content = $('#content');
+    var $submit = $("#submit");
+    var contentText = '';
+    var contentLen = 0;
+
+    var disabledSubmit = function () {
+        $submit.attr({'disabled': 'disabled'}).addClass('btn-disabled');
+    };
+    disabledSubmit();
+
+    var enabledSubmit = function () {
+        $submit.removeAttr('disabled').removeClass('btn-disabled');
+    };
+
+    $content.on('focus', function () {
+        $(".tip").removeClass('tipShow').addClass('tipHidden');
+    });
+    $content.on('keyup', function () {
+        enabledSubmit();
+    });
+
+    $submit.click(function () {
+        disabledSubmit();
+        contentText = $.trim($content.val());
+        contentLen = contentText.length;
+        if (!contentText) {
+            $(".tip").text('请填写内容').removeClass('tipHidden').addClass('tipShow');
+            return
+        }
+        if (contentLen > 400) {
+            $(".tip").text('最长400字').removeClass('tipHidden').addClass('tipShow');
+            return
+        }
+        $.ajax({
+            type: "post",
+            url: '/contact/collect',
+            data: {"content": contentText},
+            success: function (res) {//请求成功回调
+                enabledSubmit();
+                if (res.code === 200) {
+                    swal("提交成功", "", "success");
+                } else if (res.code === 400) {
+                    swal("请填写完整", "", "warning");
+                } else {
+                    swal("提交失败:" + res.msg, "", "error");
+                }
+            },
+            error: function (xhr, status) {//请求失败回调
+                enabledSubmit();
+                swal("提交失败", "", "error");
+            }
+        });
+    });
+</script>
+</html>
